@@ -7,9 +7,23 @@ interface DropdownProps {
   itemShowLimit?: number;
   prefillSelected?: { id: number, label: string }[];
   onChange: (selected: { id: number, label: string }[]) => void;
+  onSelect?: (option: { id: number, label: string }) => void;
+  onDeselect?: (option: { id: number, label: string }) => void;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
 }
 
-const Dropdown: React.FC<DropdownProps> = ({ options, isMultiSelect = false, itemShowLimit = 2, prefillSelected = [], onChange }) => {
+const Dropdown: React.FC<DropdownProps> = ({
+  options,
+  isMultiSelect = false,
+  itemShowLimit = 2,
+  prefillSelected = [],
+  onChange,
+  onSelect,
+  onDeselect,
+  onSelectAll,
+  onDeselectAll
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOptions, setSelectedOptions] = useState<{ id: number, label: string }[]>(prefillSelected);
   const [isOpen, setIsOpen] = useState(false);
@@ -21,13 +35,31 @@ const Dropdown: React.FC<DropdownProps> = ({ options, isMultiSelect = false, ite
 
   const handleSelect = (option: { id: number, label: string }) => {
     if (isMultiSelect) {
-      setSelectedOptions(prev =>
-        prev.some(item => item.id === option.id) ? prev.filter(item => item.id !== option.id) : [...prev, option]
-      );
+      setSelectedOptions(prev => {
+        const isSelected = prev.some(item => item.id === option.id);
+        const newSelectedOptions = isSelected ? prev.filter(item => item.id !== option.id) : [...prev, option];
+        if (isSelected) {
+          onDeselect && onDeselect(option);
+        } else {
+          onSelect && onSelect(option);
+        }
+        return newSelectedOptions;
+      });
     } else {
       setSelectedOptions([option]);
       setIsOpen(false);
+      onSelect && onSelect(option);
     }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedOptions(options);
+    onSelectAll && onSelectAll();
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedOptions([]);
+    onDeselectAll && onDeselectAll();
   };
 
   useEffect(() => {
@@ -66,6 +98,16 @@ const Dropdown: React.FC<DropdownProps> = ({ options, isMultiSelect = false, ite
             onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search..."
           />
+          {isMultiSelect && (
+            <div className="dropdown-select-all">
+              <input
+                type="checkbox"
+                checked={selectedOptions.length === options.length}
+                onChange={e => e.target.checked ? handleSelectAll() : handleDeselectAll()}
+              />
+              <label>{selectedOptions.length === options.length ? "Deselect All":"Select All"}</label>
+            </div>
+          )}
           <ul className="dropdown-options">
             {filteredOptions.map(option => (
               <li

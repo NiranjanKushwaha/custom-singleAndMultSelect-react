@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Dropdown from './Dropdown';
 
 const App: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<{ id: number, label: string }[]>([]);
 
-  const handleDropdownChange = (selected: { id: number, label: string }[]) => {
+  const handleDropdownChange = useCallback((selected: { id: number, label: string }[]) => {
     setSelectedOptions(selected);
-    console.log("on select: ",selected);
+  }, []);
+
+  const handleSelect = (option: { id: number, label: string }) => {
+    console.log('Selected:', option);
+  };
+
+  const handleDeselect = (option: { id: number, label: string }) => {
+    console.log('Deselected:', option);
+  };
+
+  const handleSelectAll = () => {
+    console.log('All options selected');
+  };
+
+  const handleDeselectAll = () => {
+    console.log('All options deselected');
   };
 
   return (
@@ -26,6 +41,10 @@ const App: React.FC = () => {
           { id: 2, label: 'Option 2' }
         ]}
         onChange={handleDropdownChange}
+        onSelect={handleSelect}
+        onDeselect={handleDeselect}
+        onSelectAll={handleSelectAll}
+        onDeselectAll={handleDeselectAll}
       />
       <p>Selected Options: {selectedOptions.map(option => option.label).join(', ')}</p>
     </div>
